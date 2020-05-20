@@ -1,4 +1,9 @@
 use serde::{Serialize, Deserialize};
+use surf::http;
+use crate::errors::ClientError::*;
+use crate::errors::ClientResult;
+
+pub mod errors;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,15 +51,26 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(okapi_key: String) -> Client {
-        Client { okapi_key }
+    pub fn new(okapi_key: &str) -> Client {
+        Client { okapi_key: okapi_key.to_string() }
     }
-    pub async fn get_tracking_info(&self, tracking_number: String) -> Result<TrackingInfo,surf::Exception> {
-        let req = surf::get(format!("{}{}","https://api.laposte.fr/suivi/v2/idships/",tracking_number))
+    pub async fn get_tracking_info(&self, tracking_number: &str) -> ClientResult<TrackingInfo> {
+        let mut response = surf::get(format!("{}{}","https://api.laposte.fr/suivi/v2/idships/",tracking_number))
             .set_header("Accept", "application/json")
-            .set_header("X-Okapi-Key", &(self.okapi_key));
+            .set_header("X-Okapi-Key", &(self.okapi_key))
+            .await?;
+
+        match response.status() {
+            http::StatusCode::OK => println!("Ok"),
+            http::StatusCode::BAD_REQUEST => return Err(InvalidFormat),
+            http::StatusCode::UNAUTHORIZED => return Err(Unauthorized),
+            http::StatusCode::NOT_FOUND => return Err(ParcelNotFound),
+            _ => return Err(ServerError),
+        };
+
+        println!("Response status: {}", response.status());
     
-        let res: TrackingInfo = req.recv_json().await?;
+        let res: TrackingInfo = response.body_json().await?;
         Ok(res)
     }
 }
