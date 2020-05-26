@@ -1,7 +1,10 @@
-use serde::{Serialize, Deserialize};
-use surf::http;
 use crate::errors::ClientError::*;
 use crate::errors::ClientResult;
+
+use regex::Regex;
+use serde::{Serialize, Deserialize};
+use std::convert::TryFrom;
+use surf::http;
 
 pub mod errors;
 
@@ -46,6 +49,39 @@ pub struct TrackingInfo {
     pub shipment: Shipment,
 }
 
+pub struct TrackingNumber {
+    tracking_number: String,
+}
+
+impl TryFrom<&str> for TrackingNumber {
+    type Error = &'static str;
+
+    fn try_from(tracking_number: &str) -> Result<Self, Self::Error> {
+        // Tacking number can be either
+        // 1 number + 1 letter + 11 numbers     or
+        // 2 letters + 11 numbers               or
+        // 2 letters + 9 numbers + 2 letters    or
+        // 15 numbers                           or
+        // 14 numbers + 1 letter
+        let re = Regex::new(r"^(\d[a-zA-Z]\d{11})$|^([a-zA-Z]{2}\d{11})$|^([a-zA-Z]{2}\d{9}[a-zA-Z]{2})$|^(\d{15})$|^(\d{14}[a-zA-Z])$").unwrap();
+
+        if !re.is_match(tracking_number) { return Err("Tracking number did not match La Poste format") }
+        else { Ok(TrackingNumber{ tracking_number: tracking_number.trim().to_string() }) }
+    }
+}
+
+impl Into<String> for TrackingNumber {
+    fn into(self) -> String {
+        self.tracking_number
+    }
+}
+
+impl TrackingNumber {
+    fn to_string(&self) -> String {
+        self.tracking_number.clone()
+    }
+}
+
 #[derive(Clone)]
 pub struct Client {
     okapi_key: String,
@@ -55,8 +91,10 @@ impl Client {
     pub fn new(okapi_key: &str) -> Client {
         Client { okapi_key: okapi_key.to_string() }
     }
-    pub async fn get_tracking_info(&self, tracking_number: &str) -> ClientResult<TrackingInfo> {
-        let mut response = surf::get(format!("{}{}","https://api.laposte.fr/suivi/v2/idships/",tracking_number))
+    pub async fn get_tracking_info(&self, tracking_number: TrackingNumber) -> ClientResult<TrackingInfo> {
+        let mut uri = "https://api.laposte.fr/suivi/v2/idships/".to_string();
+        uri.push_str(&tracking_number.to_string());
+        let mut response = surf::get(uri)
             .set_header("Accept", "application/json")
             .set_header("X-Okapi-Key", &(self.okapi_key))
             .await?;
