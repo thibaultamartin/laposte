@@ -46,6 +46,7 @@ pub struct TrackingInfo {
     pub shipment: Shipment,
 }
 
+#[derive(Clone)]
 pub struct Client {
     okapi_key: String,
 }
