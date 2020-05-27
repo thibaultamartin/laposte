@@ -8,7 +8,7 @@ use surf::http;
 
 pub mod errors;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimelineEvent {
     pub id: u32,
@@ -19,7 +19,7 @@ pub struct TimelineEvent {
     pub country: String
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Event {
     pub order: u32,
     pub date: String,
@@ -77,7 +77,7 @@ impl Into<String> for TrackingNumber {
 }
 
 impl TrackingNumber {
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         self.tracking_number.clone()
     }
 }
