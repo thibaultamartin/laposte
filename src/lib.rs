@@ -35,9 +35,6 @@ pub struct Shipment {
     pub is_final: bool,
     pub timeline: Vec<TimelineEvent>,
     pub event: Vec<Event>,
-    pub url: String,
-    pub holder: u32,
-    pub url_detail: String,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -100,14 +97,12 @@ impl Client {
             .await?;
 
         match response.status() {
-            http::StatusCode::OK => println!("Ok"),
+            http::StatusCode::OK => {},
             http::StatusCode::BAD_REQUEST => return Err(InvalidFormat),
             http::StatusCode::UNAUTHORIZED => return Err(Unauthorized),
             http::StatusCode::NOT_FOUND => return Err(ParcelNotFound),
             _ => return Err(ServerError),
         };
-
-        println!("Response status: {}", response.status());
     
         let res: TrackingInfo = response.body_json().await?;
         Ok(res)
