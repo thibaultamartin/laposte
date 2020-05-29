@@ -1,12 +1,14 @@
 use crate::errors::ClientError::*;
 use crate::errors::ClientResult;
+use crate::status::DeliveryStatus;
 
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, de};
 use std::convert::TryFrom;
 use surf::http;
 
 pub mod errors;
+pub mod status;
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,7 +35,9 @@ pub struct Shipment {
     pub id_ship: String,
     pub product: String,
     pub is_final: bool,
-    pub timeline: Vec<TimelineEvent>,
+    #[serde(deserialize_with = "delivery_status")]
+    pub timeline: DeliveryStatus,
+    //pub timeline: Vec<TimelineEvent>,
     pub event: Vec<Event>,
 }
 
@@ -109,5 +113,20 @@ impl Client {
     }
 }
 
+fn delivery_status<'de, D>(deserializer: D) -> Result<DeliveryStatus, D::Error>
+where
+    D: de::Deserializer<'de>
+{
+    let timeline = Vec::<TimelineEvent>::deserialize(deserializer)?;
+    let mut step = 1;
 
+    for event in timeline {
+        if event.status {
+            step = event.id;
+        } else {
+            break;
+        }
+    }
 
+    DeliveryStatus::try_from(step).map_err(de::Error::custom)
+}

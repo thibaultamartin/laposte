@@ -31,6 +31,7 @@ impl From<surf::Exception> for ClientError {
 
 impl From<std::io::Error> for ClientError {
     fn from(_err: std::io::Error) -> Self {
+        println!("Error: {}",_err);
         ClientError::ServerError
     }
 }
