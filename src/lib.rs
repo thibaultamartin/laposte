@@ -50,6 +50,7 @@ pub struct TrackingInfo {
     pub shipment: Shipment,
 }
 
+#[derive(Clone)]
 pub struct TrackingNumber {
     tracking_number: String,
 }
