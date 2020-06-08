@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use serde::{Serialize,Deserialize};
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum DeliveryStatus {
     ReadyToBeCollectedByCarrier,
     CollectedByCarrier,
