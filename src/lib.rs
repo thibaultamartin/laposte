@@ -39,6 +39,7 @@ pub struct Shipment {
     pub timeline: DeliveryStatus,
     //pub timeline: Vec<TimelineEvent>,
     pub event: Vec<Event>,
+    pub holder: u32,
 }
 
 #[derive(Deserialize, Serialize)]
