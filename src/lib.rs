@@ -85,6 +85,19 @@ impl TrackingNumber {
     }
 }
 
+impl Shipment {
+    pub fn last_event(&self) -> Option<EventStatus> {
+        let last_event = self.event.iter().max_by(|a, b| {
+            a.order.cmp(&b.order)
+        });
+
+        match last_event {
+            Some(event) => Some(event.code),
+            None => None
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Client {
     okapi_key: String,
