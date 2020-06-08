@@ -86,15 +86,16 @@ impl TrackingNumber {
 }
 
 impl Shipment {
-    pub fn last_event(&self) -> Option<EventStatus> {
-        let last_event = self.event.iter().max_by(|a, b| {
+    pub fn last_event(&self) -> Option<Event> {
+        self.event.iter().max_by(|a, b| {
             a.order.cmp(&b.order)
-        });
+        })
+    }
 
-        match last_event {
-            Some(event) => Some(event.code),
-            None => None
-        }
+    pub fn first_event(&self) -> Option<Event> {
+        self.event.iter().min_by(|a, b| {
+            a.order.cmp(&b.order)
+        })
     }
 }
 
