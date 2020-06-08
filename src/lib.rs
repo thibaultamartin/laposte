@@ -1,6 +1,6 @@
 use crate::errors::ClientError::*;
 use crate::errors::ClientResult;
-use crate::status::DeliveryStatus;
+use crate::status::{DeliveryStatus, EventStatus};
 
 use regex::Regex;
 use serde::{Serialize, Deserialize, de};
@@ -26,7 +26,8 @@ pub struct Event {
     pub order: u32,
     pub date: String,
     pub label: String,
-    pub code: String,
+    #[serde(deserialize_with = "event_status")]
+    pub code: EventStatus,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -37,7 +38,6 @@ pub struct Shipment {
     pub is_final: bool,
     #[serde(deserialize_with = "delivery_status")]
     pub timeline: DeliveryStatus,
-    //pub timeline: Vec<TimelineEvent>,
     pub event: Vec<Event>,
     pub holder: u32,
 }
@@ -131,4 +131,13 @@ where
     }
 
     DeliveryStatus::try_from(step).map_err(de::Error::custom)
+}
+
+fn event_status<'de, D>(deserializer:D) -> Result<EventStatus, D::Error>
+where
+    D: de::Deserializer<'de>
+{
+    let code = String::deserialize(deserializer)?;
+
+    EventStatus::try_from(code.as_ref()).map_err(de::Error::custom)
 }
