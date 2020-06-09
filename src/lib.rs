@@ -97,6 +97,34 @@ impl Shipment {
             a.order.cmp(&b.order)
         })
     }
+
+    pub fn shipping_event(&self) -> Option<&Event> {
+        // No event -> it's not worth checking
+        if self.event.len() == 0 {
+            return None
+        }
+
+        // Try to return the first EventStatus::{Declared,  CollectedByCarrier,
+        // CollectedInShippingCountry} we can find
+        let declared: Vec<&Event> = self.event.iter().filter(|event| {event.code == EventStatus::Declared}).collect();
+        if declared.len() > 0 {
+            // TODO if there are several entries, sort by date
+            return Some(declared.iter().next().unwrap())
+        }
+
+        let collected_by_carrier: Vec<&Event> = self.event.iter().filter(|event| {event.code == EventStatus::CollectedByCarrier}).collect();
+        if collected_by_carrier.len() > 0 {
+            // TODO if there are several entries, sort by date
+            return Some(collected_by_carrier.iter().next().unwrap())
+        }
+
+        let collected_in_shipping_country: Vec<&Event> = self.event.iter().filter(|event| {event.code == EventStatus::CollectedInShippingCountry}).collect();
+        if collected_in_shipping_country.len() > 0 {
+            return Some(collected_in_shipping_country.iter().next().unwrap())
+        }
+
+        None
+    }
 }
 
 #[derive(Clone)]

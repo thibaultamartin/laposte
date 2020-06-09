@@ -25,7 +25,7 @@ impl TryFrom<u32> for DeliveryStatus {
     }
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EventStatus {
     Declared,
     CollectedByCarrier,
